@@ -15,6 +15,25 @@ class CustomerController extends Controller
 
     public function register(Request $request)
     {
+        $rules = [
+            'email'    => 'required|email|unique:users',
+            'password' => [
+                'required',
+                'string',
+                'min:8',             // must be at least 10 characters in length
+                'regex:/[a-z]/',      // must contain at least one lowercase letter
+                'regex:/[A-Z]/',      // must contain at least one uppercase letter
+                'regex:/[0-9]/',      // must contain at least one digit
+                'regex:/[@$!%*#?&]/', // must contain a special character
+            ],
+            'phone'    => 'required|unique:users|numeric|digits:10',
+        ];
+
+        $validation = \Validator::make( $request->all(), $rules );
+    
+        if( $validation->fails() ) {
+            return redirect()->back()->with('error',$validation->errors()->first());
+        }
         $user = new User();
         $user->name = $request->name;
         $user->email = $request->email;
@@ -59,14 +78,22 @@ class CustomerController extends Controller
 
     public function update_profile(Request $request)
     {
-        $user = Auth::User();
-        
+        $rules = [
+            'profile_pic'    => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:500',
+        ];
+
+        $validation = \Validator::make( $request->all(), $rules );
+    
+        if( $validation->fails() ) {
+            return redirect()->back()->with('error',$validation->errors()->first());
+        }
+           
         if($request->hasFile('profile_pic')) {
             $file= $request->file('profile_pic');
             $allowedfileExtension=['JPEG','jpg','png'];
             $extension = $file->getClientOriginalExtension();
             $check = in_array($extension,$allowedfileExtension);
-            if($check){
+            // if($check){
                 $file_path = public_path('/images/customer/profile/'.$user->profile_pic);
                 if(file_exists($file_path) && $user->profile_pic != '')
                 {
@@ -76,7 +103,7 @@ class CustomerController extends Controller
                 $filename = substr(str_shuffle(str_repeat($pool, 5)), 0, 12) .'.'.$extension;
                 $path = $file->move(public_path('/images/customer/profile'), $filename);
                 $user->profile_pic = $filename;
-            }
+            // }
         }
         $user->save();
         return response()->json([
