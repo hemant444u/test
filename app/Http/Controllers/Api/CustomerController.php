@@ -78,6 +78,7 @@ class CustomerController extends Controller
 
     public function update_profile(Request $request)
     {
+
         $rules = [
             'profile_pic'    => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:500',
         ];
@@ -88,6 +89,7 @@ class CustomerController extends Controller
             return redirect()->back()->with('error',$validation->errors()->first());
         }
            
+        $user = Auth::User();
         if($request->hasFile('profile_pic')) {
             $file= $request->file('profile_pic');
             $allowedfileExtension=['JPEG','jpg','png'];
